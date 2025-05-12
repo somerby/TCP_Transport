@@ -1,6 +1,6 @@
 from fastapi import Body, FastAPI
 from fastapi import Body, FastAPI
-from main1 import Segment
+from transport_earth import Segment
 import httpx
 
 APPLICATION_RECEIVE = "172.20.10.2:8020/receive"
