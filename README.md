@@ -43,5 +43,8 @@ pip install -r requirements.txt
 ### 4. Запустите сервер:
 
 ```bash
-uvicorn transport:app --port 8080 --host 0.0.0.0
+uvicorn transport_earth:app --port 8080 --host 0.0.0.0
+```
+```bash
+uvicorn transport_mars:app --port 8081 --host 0.0.0.0
 ```

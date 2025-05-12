@@ -10,11 +10,9 @@ import time
 import httpx
 import asyncio
 
-LINK_CODE_SEGMENT = "10.147.18.201:3050/CodeSegment"
-LINK_CODE_RECEIPT = "10.147.18.201:3050/CodeReceipt"
+LINK_CODE_SEGMENT = "172.20.10.6:3050/CodeSegment"
 
-APPLICATION_RECEIVE = "10.147.18.159:8020/receive"
-APPLICATION_RECEIVE_RECEIPT = "10.147.18.159:8010/receiveReceipt"
+APPLICATION_RECEIVE_RECEIPT = "172.20.10.2:8010/receiveReceipt"
 
 KAFKA_BOOTSTRAP_SERVERS = "localhost:9092"
 KAFKA_TOPIC = "messages"
@@ -124,22 +122,6 @@ async def SendReceiptToApplication(id_seg: int, status: bool):
             except httpx.HTTPError as e:
                 print(f"Ошибка при отправке квитанции: {e}")
 
-async def SendMessagesToApplication(segment: Segment):
-    async with httpx.AsyncClient() as client:
-        for message in segment.messages:
-            try:
-                response = await client.post(
-                    f'http://{APPLICATION_RECEIVE}',
-                    json={
-                        "id": message.id,
-                        "username": message.username,
-                        "data": message.payload,
-                        "send_time": message.timestamp
-                    }
-                )
-            except httpx.HTTPError as e:
-                print(f"Ошибка при отправке сообщения: {e}")
-
 def Consume():
     global ready_to_send, last_offset, id_seg, segments_in_process, app_loop
     ready_to_send = False
@@ -209,16 +191,6 @@ async def send_message(background_tasks: BackgroundTasks, msg: Message = Body(..
         background_tasks.add_task(asyncio.to_thread, Consume)
     
     return {"status": "Message sent"}
-
-@app.post("/TransferSegment", summary="Отправка сегмента на Марс", response_description="Сегмент пришел на Марс")
-async def transfer_segment(sgm: Segment = Body(...)):
-    await SendMessagesToApplication(sgm)
-    async with httpx.AsyncClient() as client:
-        try:
-            response = await client.post(f'http://{LINK_CODE_RECEIPT}', json={"id_seg": sgm.id_seg})
-        except httpx.HTTPError as e:
-            print(f"Ошибка: {e}")
-    return {"status": "Ok"}
 
 @app.post("/TransferReceipt", summary="Отправка квитанции на Землю", response_description="Квитанция пришла на Землю")
 async def transfer_receipt(rcp: Receipt = Body(...)):
